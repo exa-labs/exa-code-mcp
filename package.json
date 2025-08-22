@@ -1,7 +1,7 @@
 {
   "name": "exa-code-mcp",
   "version": "2.0.3",
-  "description": "A Model Context Protocol server with Exa /context for library context retrieval. Provides contextual code snippets from libraries and repositories to enhance development workflows.",
+  "description": "MCP for Coding Agents",
   "type": "module",
   "module": "./src/index.ts",
   "repository": {

@@ -1,4 +1,4 @@
-# Exa /context MCP Server
+# Exa Code MCP Server
 
 Experimental MCP implementation of the Exa /context API.
 

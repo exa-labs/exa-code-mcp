@@ -1,15 +1,15 @@
 {
-  "name": "exa-mcp-server",
+  "name": "exa-code-mcp",
   "version": "2.0.3",
   "description": "A Model Context Protocol server with Exa /context for library context retrieval. Provides contextual code snippets from libraries and repositories to enhance development workflows.",
   "type": "module",
   "module": "./src/index.ts",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/exa-labs/exa-mcp-server.git"
+    "url": "git+https://github.com/exa-labs/exa-code-mcp.git"
   },
   "bin": {
-    "exa-mcp-server": "./.smithery/index.cjs"
+    "exa-code-mcp": "./.smithery/index.cjs"
   },
   "files": [
     ".smithery"

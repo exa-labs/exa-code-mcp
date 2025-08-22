@@ -1,0 +1,53 @@
+{
+  "name": "exa-mcp-server",
+  "version": "2.0.3",
+  "description": "A Model Context Protocol server with Exa /context for library context retrieval. Provides contextual code snippets from libraries and repositories to enhance development workflows.",
+  "type": "module",
+  "module": "./src/index.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/exa-labs/exa-mcp-server.git"
+  },
+  "bin": {
+    "exa-mcp-server": "./.smithery/index.cjs"
+  },
+  "files": [
+    ".smithery"
+  ],
+  "keywords": [
+    "mcp",
+    "context",
+    "model context protocol",
+    "exa",
+    "library context",
+    "context",
+    "claude",
+    "ai",
+    "context",
+    "development"
+  ],
+  "author": "Exa Labs",
+  "scripts": {
+    "build": "npm run build:shttp",
+    "build:stdio": "npx @smithery/cli@latest build src/index.ts --transport stdio && echo '#!/usr/bin/env node' | cat - .smithery/index.cjs > temp && mv temp .smithery/index.cjs && chmod +x .smithery/index.cjs",
+    "build:shttp": "npx @smithery/cli@latest build src/index.ts --transport shttp",
+    "prepare": "npm run build:stdio",
+    "watch": "tsc --watch",
+    "dev": "npx @smithery/cli@latest dev",
+    "inspector": "npx @modelcontextprotocol/inspector build/index.js",
+    "prepublishOnly": "npm run build:stdio"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "axios": "^1.7.8",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.24",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

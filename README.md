@@ -27,4 +27,4 @@ npm run build:stdio
 ## Tools
 
 - `find_library_exa` - Find libraries available for exa-code search
-- `get_library_context_exa` - Get contextual code snippets from libraries
+- `get_library_context_exa` - Get contextual code snippets from open source libraries

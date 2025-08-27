@@ -4,17 +4,21 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { API_CONFIG } from "./config.js";
 import { createRequestLogger } from "../utils/logger.js";
 
-// Exa Code API request/response types based on flattened discriminated union
+// Exa Code API request/response types based on new message object structure
 type ExaCodeRequest = {
   action: "findLibrary";
-  githubLibraryName: string;
-  libraryVersion?: string;
+  message: {
+    githubLibraryName: string;
+    libraryVersion?: string;
+  };
 } | {
   action: "getLibraryContext";
-  githubLibraryName: string;
-  libraryVersion?: string;
-  tokensNum: number;
-  query: string;
+  message: {
+    githubLibraryName: string;
+    libraryVersion?: string;
+    tokensNum: number;
+    query: string;
+  };
 };
 
 type ExaCodeResponse = {
@@ -40,9 +44,11 @@ export function registerExaCodeTool(server: McpServer, config?: { exaApiKey?: st
   // Register findLibrary tool
   server.tool(
     "find_library_exa",
-    "Find a library in Exa Code to check if it's available for exa-code search. You can use % as a wildcard in the library name.",
+    "Find a library in Exa Code to check if it's available for exa-code search. Library name must include '/'. You can use % as a wildcard in either the user or repo part.",
     {
-      githubLibraryName: z.string().describe("GitHub library name (e.g., 'facebook/react'). Use % as wildcard (e.g., 'facebook/%' or '%/react')"),
+      githubLibraryName: z.string().refine(val => val.includes('/'), {
+        message: "GitHub library name must include '/' separator (e.g., 'facebook/react')"
+      }).describe("GitHub library name (e.g., 'facebook/react'). Use % as wildcard (e.g., 'facebook/%' or '%/react')"),
       libraryVersion: z.string().optional().describe("Optional version of the library")
     },
     async ({ githubLibraryName, libraryVersion }) => {
@@ -64,8 +70,10 @@ export function registerExaCodeTool(server: McpServer, config?: { exaApiKey?: st
 
         const exaCodeRequest: ExaCodeRequest = {
           action: "findLibrary",
-          githubLibraryName,
-          ...(libraryVersion && { libraryVersion })
+          message: {
+            githubLibraryName,
+            ...(libraryVersion && { libraryVersion })
+          }
         };
         
         logger.log("Sending findLibrary request to Exa API");
@@ -120,7 +128,9 @@ export function registerExaCodeTool(server: McpServer, config?: { exaApiKey?: st
     "get_library_context_exa",
     "Get contextual code snippets from a specific library version using Exa Code API endpoint.",
     {
-      githubLibraryName: z.string().describe("GitHub library name (e.g., 'facebook/react')"),
+      githubLibraryName: z.string().refine(val => val.includes('/'), {
+        message: "GitHub library name must include '/' separator (e.g., 'facebook/react')"
+      }).describe("GitHub library name (e.g., 'facebook/react')"),
       libraryVersion: z.string().optional().describe("Optional version of the library"),
       query: z.string().min(1).max(2000).describe("Search query to find relevant code snippets"),
       tokensNum: z.number().min(50).max(500000).describe("Maximum number of tokens to return in the response")
@@ -144,10 +154,12 @@ export function registerExaCodeTool(server: McpServer, config?: { exaApiKey?: st
 
         const exaCodeRequest: ExaCodeRequest = {
           action: "getLibraryContext",
-          githubLibraryName,
-          libraryVersion,
-          tokensNum,
-          query
+          message: {
+            githubLibraryName,
+            ...(libraryVersion && { libraryVersion }),
+            tokensNum,
+            query
+          }
         };
         
         logger.log("Sending getLibraryContext request to Exa API");

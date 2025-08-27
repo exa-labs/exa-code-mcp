@@ -2,7 +2,7 @@
  * Simple logging utility for MCP server
  */
 export const log = (message: string): void => {
-  console.error(`[EXA-CONTEXT-DEBUG] ${message}`);
+  console.error(`[EXA-CODE-DEBUG] ${message}`);
 };
 
 export const createRequestLogger = (requestId: string, toolName: string) => {
@@ -11,7 +11,7 @@ export const createRequestLogger = (requestId: string, toolName: string) => {
       log(`[${requestId}] [${toolName}] ${message}`);
     },
     start: (query: string): void => {
-      log(`[${requestId}] [${toolName}] Starting context request for query: "${query}"`);
+      log(`[${requestId}] [${toolName}] Starting exa-code request for query: "${query}"`);
     },
     error: (error: unknown): void => {
       log(`[${requestId}] [${toolName}] Error: ${error instanceof Error ? error.message : String(error)}`);

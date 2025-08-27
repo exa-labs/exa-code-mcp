@@ -4,20 +4,20 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { API_CONFIG } from "./config.js";
 import { createRequestLogger } from "../utils/logger.js";
 
-// Context API request/response types based on flattened discriminated union
-type ContextRequest = {
+// Exa Code API request/response types based on flattened discriminated union
+type ExaCodeRequest = {
   action: "findLibrary";
   githubLibraryName: string;
   libraryVersion?: string;
 } | {
-  action: "getLibraryContext";
+  action: "getLibraryCode";
   githubLibraryName: string;
   libraryVersion?: string;
   tokensNum: number;
   query: string;
 };
 
-type ContextResponse = {
+type ExaCodeResponse = {
   action: "findLibrary";
   requestId: string;
   library_name: string;
@@ -26,7 +26,7 @@ type ContextResponse = {
     exists: boolean;
   };
 } | {
-  action: "getLibraryContext";
+  action: "getLibraryCode";
   requestId: string;
   query: string;
   repository: string;
@@ -36,11 +36,11 @@ type ContextResponse = {
   searchTime: number;
 };
 
-export function registerContextTool(server: McpServer, config?: { exaApiKey?: string }): void {
+export function registerExaCodeTool(server: McpServer, config?: { exaApiKey?: string }): void {
   // Register findLibrary tool
   server.tool(
     "find_library_exa",
-    "Find a library in Exa /context to check if it's available for context search. You can use % as a wildcard in the library name.",
+    "Find a library in Exa Code to check if it's available for exa-code search. You can use % as a wildcard in the library name.",
     {
       githubLibraryName: z.string().describe("GitHub library name (e.g., 'facebook/react'). Use % as wildcard (e.g., 'facebook/%' or '%/react')"),
       libraryVersion: z.string().optional().describe("Optional version of the library")
@@ -62,7 +62,7 @@ export function registerContextTool(server: McpServer, config?: { exaApiKey?: st
           timeout: 30000
         });
 
-        const contextRequest: ContextRequest = {
+        const exaCodeRequest: ExaCodeRequest = {
           action: "findLibrary",
           githubLibraryName,
           ...(libraryVersion && { libraryVersion })
@@ -70,9 +70,9 @@ export function registerContextTool(server: McpServer, config?: { exaApiKey?: st
         
         logger.log("Sending findLibrary request to Exa API");
         
-        const response = await axiosInstance.post<ContextResponse>(
+        const response = await axiosInstance.post<ExaCodeResponse>(
           '/context',
-          contextRequest,
+          exaCodeRequest,
           { timeout: 30000 }
         );
         
@@ -115,15 +115,15 @@ export function registerContextTool(server: McpServer, config?: { exaApiKey?: st
     }
   );
 
-  // Register getLibraryContext tool
+  // Register getLibraryCode tool
   server.tool(
     "get_library_context_exa",
-    "Get contextual code snippets from a specific library version using Exa /context API endpoint.",
+    "Get contextual code snippets from a specific library version using Exa Code API endpoint.",
     {
       githubLibraryName: z.string().describe("GitHub library name (e.g., 'facebook/react')"),
       libraryVersion: z.string().optional().describe("Optional version of the library"),
-      query: z.string().min(1).max(2000).describe("Search query to find relevant code context"),
-      tokensNum: z.number().min(50).max(500000).describe("Maximum number of tokens to return in the context")
+      query: z.string().min(1).max(2000).describe("Search query to find relevant code snippets"),
+      tokensNum: z.number().min(50).max(500000).describe("Maximum number of tokens to return in the response")
     },
     async ({ githubLibraryName, libraryVersion, query, tokensNum }) => {
       const requestId = `get_library_context_exa-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
@@ -142,44 +142,44 @@ export function registerContextTool(server: McpServer, config?: { exaApiKey?: st
           timeout: 30000
         });
 
-        const contextRequest: ContextRequest = {
-          action: "getLibraryContext",
+        const exaCodeRequest: ExaCodeRequest = {
+          action: "getLibraryCode",
           githubLibraryName,
           libraryVersion,
           tokensNum,
           query
         };
         
-        logger.log("Sending getLibraryContext request to Exa API");
+        logger.log("Sending getLibraryCode request to Exa API");
         
-        const response = await axiosInstance.post<ContextResponse>(
+        const response = await axiosInstance.post<ExaCodeResponse>(
           '/context',
-          contextRequest,
+          exaCodeRequest,
           { timeout: 30000 }
         );
         
-        logger.log("Received getLibraryContext response from Exa API");
+        logger.log("Received getLibraryCode response from Exa API");
 
         if (!response.data) {
-          logger.log("Warning: Empty response from Exa /context API");
+          logger.log("Warning: Empty response from Exa Code API");
           return {
             content: [{
               type: "text" as const,
-              text: "No context found. Please try a different query or library."
+              text: "No code snippets found. Please try a different query or library."
             }]
           };
         }
 
-        logger.log(`Context search completed with ${response.data.resultsCount || 0} results`);
+        logger.log(`Code search completed with ${'resultsCount' in response.data ? response.data.resultsCount : 0} results`);
         
-        // Return the actual context content from the response field
-        const contextContent = response.data.response || '';
+        // Return the actual code content from the response field
+        const codeContent = typeof response.data.response === 'string' ? response.data.response : JSON.stringify(response.data.response, null, 2);
         
         logger.complete();
         return {
           content: [{
             type: "text" as const,
-            text: contextContent
+            text: codeContent
           }]
         };
       } catch (error) {
@@ -193,7 +193,7 @@ export function registerContextTool(server: McpServer, config?: { exaApiKey?: st
           return {
             content: [{
               type: "text" as const,
-              text: `Context search error (${statusCode}): ${errorMessage}`
+              text: `Code search error (${statusCode}): ${errorMessage}`
             }],
             isError: true,
           };
@@ -202,7 +202,7 @@ export function registerContextTool(server: McpServer, config?: { exaApiKey?: st
         return {
           content: [{
             type: "text" as const,
-            text: `Context search error: ${error instanceof Error ? error.message : String(error)}`
+            text: `Code search error: ${error instanceof Error ? error.message : String(error)}`
           }],
           isError: true,
         };

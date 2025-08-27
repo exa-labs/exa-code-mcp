@@ -1,6 +1,6 @@
 # Exa Code MCP Server
 
-Experimental MCP implementation of the Exa /context API.
+Experimental MCP implementation of the Exa Code API.
 
 ## Setup
 
@@ -13,7 +13,7 @@ npm run build:stdio
 ```json
 {
   "mcpServers": {
-    "/context": {
+    "exa-code": {
       "command": "node",
       "args": [".smithery/index.cjs"],
       "env": {
@@ -26,5 +26,5 @@ npm run build:stdio
 
 ## Tools
 
-- `find_library_exa` - Find libraries available for context search
+- `find_library_exa` - Find libraries available for exa-code search
 - `get_library_context_exa` - Get contextual code snippets from libraries

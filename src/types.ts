@@ -1,10 +1,10 @@
-// Exa /context API Types - only context-related interfaces
-export interface ExaContextRequest {
+// Exa Code API Types - only exa-code-related interfaces
+export interface ExaCodeRequest {
   query: string;
   tokensNum: number;
 }
 
-export interface ExaContextResult {
+export interface ExaCodeResult {
   id: string;
   title: string;
   url: string;
@@ -12,7 +12,7 @@ export interface ExaContextResult {
   score?: number;
 }
 
-export interface ExaContextResponse {
+export interface ExaCodeResponse {
   requestId: string;
   query: string;
   repository: string;
@@ -23,7 +23,7 @@ export interface ExaContextResponse {
 }
 
 // Tool Types
-export interface ContextArgs {
+export interface CodeArgs {
   githubLibraryName: string;
   libraryVersion?: string;
   query: string;

@@ -10,7 +10,7 @@ type ExaCodeRequest = {
   githubLibraryName: string;
   libraryVersion?: string;
 } | {
-  action: "getLibraryCode";
+  action: "getLibraryContext";
   githubLibraryName: string;
   libraryVersion?: string;
   tokensNum: number;
@@ -26,7 +26,7 @@ type ExaCodeResponse = {
     exists: boolean;
   };
 } | {
-  action: "getLibraryCode";
+  action: "getLibraryContext";
   requestId: string;
   query: string;
   repository: string;
@@ -115,7 +115,7 @@ export function registerExaCodeTool(server: McpServer, config?: { exaApiKey?: st
     }
   );
 
-  // Register getLibraryCode tool
+  // Register getLibraryContext tool
   server.tool(
     "get_library_context_exa",
     "Get contextual code snippets from a specific library version using Exa Code API endpoint.",
@@ -143,14 +143,14 @@ export function registerExaCodeTool(server: McpServer, config?: { exaApiKey?: st
         });
 
         const exaCodeRequest: ExaCodeRequest = {
-          action: "getLibraryCode",
+          action: "getLibraryContext",
           githubLibraryName,
           libraryVersion,
           tokensNum,
           query
         };
         
-        logger.log("Sending getLibraryCode request to Exa API");
+        logger.log("Sending getLibraryContext request to Exa API");
         
         const response = await axiosInstance.post<ExaCodeResponse>(
           '/context',
@@ -158,7 +158,7 @@ export function registerExaCodeTool(server: McpServer, config?: { exaApiKey?: st
           { timeout: 30000 }
         );
         
-        logger.log("Received getLibraryCode response from Exa API");
+        logger.log("Received getLibraryContext response from Exa API");
 
         if (!response.data) {
           logger.log("Warning: Empty response from Exa Code API");

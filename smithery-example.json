@@ -1,0 +1,8 @@
+{
+  "exaApiKey": "your-exa-api-key-here",
+  "enabledTools": [
+    "find_library_exa",
+    "get_library_context_exa"
+  ],
+  "debug": false
+}

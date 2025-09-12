@@ -4,142 +4,38 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { API_CONFIG } from "./config.js";
 import { createRequestLogger } from "../utils/logger.js";
 
-// Exa Code API request/response types based on new message object structure
+// Exa Code API request/response types for simplified interface
 type ExaCodeRequest = {
-  action: "findLibrary";
-  message: {
-    githubLibraryName: string;
-    libraryVersion?: string;
-  };
-} | {
-  action: "getLibraryContext";
-  message: {
-    githubLibraryName: string;
-    libraryVersion?: string;
-    tokensNum: number;
-    query: string;
-  };
+  query: string;
+  tokensNum: number;
+  flags?: string[];
 };
 
 type ExaCodeResponse = {
-  action: "findLibrary";
-  requestId: string;
-  library_name: string;
-  library_version?: string;
-  response: {
-    exists: boolean;
-  };
-} | {
-  action: "getLibraryContext";
   requestId: string;
   query: string;
-  repository: string;
   response: string;
   resultsCount: number;
   costDollars: string;
   searchTime: number;
+  outputTokens: number;
+  traces?: any;
 };
 
 export function registerExaCodeTool(server: McpServer, config?: { exaApiKey?: string }): void {
-  // Register findLibrary tool
-  server.tool(
-    "find_library_exa",
-    "Find a library in Exa Code to check if it's available for exa-code search. Library name must include '/'. You can use % as a wildcard in either the user or repo part.",
-    {
-      githubLibraryName: z.string().refine(val => val.includes('/'), {
-        message: "GitHub library name must include '/' separator (e.g., 'facebook/react')"
-      }).describe("GitHub library name (e.g., 'facebook/react'). Use % as wildcard (e.g., 'facebook/%' or '%/react')"),
-      libraryVersion: z.string().optional().describe("Optional version of the library")
-    },
-    async ({ githubLibraryName, libraryVersion }) => {
-      const requestId = `find_library_exa-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
-      const logger = createRequestLogger(requestId, 'find_library_exa');
-      
-      logger.start(`Finding library ${githubLibraryName}${libraryVersion ? `@${libraryVersion}` : ''}`);
-      
-      try {
-        const axiosInstance = axios.create({
-          baseURL: API_CONFIG.BASE_URL,
-          headers: {
-            'accept': 'application/json',
-            'content-type': 'application/json',
-            'x-api-key': config?.exaApiKey || process.env.EXA_API_KEY || ''
-          },
-          timeout: 30000
-        });
-
-        const exaCodeRequest: ExaCodeRequest = {
-          action: "findLibrary",
-          message: {
-            githubLibraryName,
-            ...(libraryVersion && { libraryVersion })
-          }
-        };
-        
-        logger.log("Sending findLibrary request to Exa API");
-        
-        const response = await axiosInstance.post<ExaCodeResponse>(
-          '/context',
-          exaCodeRequest,
-          { timeout: 30000 }
-        );
-        
-        logger.log("Received findLibrary response from Exa API");
-        logger.complete();
-        
-        // Return the response content directly
-        const responseContent = response.data.response || response.data;
-        
-        return {
-          content: [{
-            type: "text" as const,
-            text: typeof responseContent === 'string' ? responseContent : JSON.stringify(responseContent, null, 2)
-          }]
-        };
-      } catch (error) {
-        logger.error(error);
-        
-        if (axios.isAxiosError(error)) {
-          const statusCode = error.response?.status || 'unknown';
-          const errorMessage = error.response?.data?.message || error.message;
-          
-          return {
-            content: [{
-              type: "text" as const,
-              text: `Find library error (${statusCode}): ${errorMessage}`
-            }],
-            isError: true,
-          };
-        }
-        
-        return {
-          content: [{
-            type: "text" as const,
-            text: `Find library error: ${error instanceof Error ? error.message : String(error)}`
-          }],
-          isError: true,
-        };
-      }
-    }
-  );
-
-  // Register getLibraryContext tool
+  // Register simplified context tool
   server.tool(
     "get_library_context_exa",
-    "Get contextual code snippets from a specific library version using Exa Code API endpoint.",
+    "Get contextual code snippets using Exa Code API endpoint with simplified interface.",
     {
-      githubLibraryName: z.string().refine(val => val.includes('/'), {
-        message: "GitHub library name must include '/' separator (e.g., 'facebook/react')"
-      }).describe("GitHub library name (e.g., 'facebook/react')"),
-      libraryVersion: z.string().optional().describe("Optional version of the library"),
       query: z.string().min(1).max(2000).describe("Search query to find relevant code snippets"),
       tokensNum: z.number().min(50).max(500000).describe("Maximum number of tokens to return in the response")
     },
-    async ({ githubLibraryName, libraryVersion, query, tokensNum }) => {
+    async ({ query, tokensNum }) => {
       const requestId = `get_library_context_exa-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
       const logger = createRequestLogger(requestId, 'get_library_context_exa');
       
-      logger.start(`${query} in ${githubLibraryName}${libraryVersion ? `@${libraryVersion}` : ''}`);
+      logger.start(`Searching for: ${query}`);
       
       try {
         const axiosInstance = axios.create({
@@ -153,16 +49,11 @@ export function registerExaCodeTool(server: McpServer, config?: { exaApiKey?: st
         });
 
         const exaCodeRequest: ExaCodeRequest = {
-          action: "getLibraryContext",
-          message: {
-            githubLibraryName,
-            ...(libraryVersion && { libraryVersion }),
-            tokensNum,
-            query
-          }
+          query,
+          tokensNum
         };
         
-        logger.log("Sending getLibraryContext request to Exa API");
+        logger.log("Sending context request to Exa API");
         
         const response = await axiosInstance.post<ExaCodeResponse>(
           '/context',
@@ -170,7 +61,7 @@ export function registerExaCodeTool(server: McpServer, config?: { exaApiKey?: st
           { timeout: 30000 }
         );
         
-        logger.log("Received getLibraryContext response from Exa API");
+        logger.log("Received context response from Exa API");
 
         if (!response.data) {
           logger.log("Warning: Empty response from Exa Code API");

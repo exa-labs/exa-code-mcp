@@ -25,15 +25,15 @@ type ExaCodeResponse = {
 export function registerExaCodeTool(server: McpServer, config?: { exaApiKey?: string }): void {
   // Register simplified context tool
   server.tool(
-    "get_library_context_exa",
+    "get_code_context",
     "Get contextual code snippets using Exa Code API endpoint.",
     {
       query: z.string().min(1).max(2000).describe("Search query to find relevant code snippets"),
       tokensNum: z.number().min(50).max(500000).describe("Maximum number of tokens to return in the response")
     },
     async ({ query, tokensNum }) => {
-      const requestId = `get_library_context_exa-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
-      const logger = createRequestLogger(requestId, 'get_library_context_exa');
+      const requestId = `get_code_context-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+      const logger = createRequestLogger(requestId, 'get_code_context');
       
       logger.start(`Searching for: ${query}`);
       

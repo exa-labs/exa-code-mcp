@@ -26,5 +26,4 @@ npm run build:stdio
 
 ## Tools
 
-- `find_library_exa` - Find libraries available for exa-code
-- `get_library_context_exa` - Get contextual code snippets from open source libraries
+- `get_code_context` - Get grounding context for your coding agent
